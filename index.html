@@ -1,150 +1,145 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b1024">
-  <meta name="description" content="Một mini game nhỏ: sửa chiếc đèn chập chờn và thắp sáng đêm tối.">
-  <title>Thợ điện bất đắc dĩ 🌙</title>
-  <style>
-    :root { color-scheme: dark; --gold:#ffd36a; --ink:#0b1024; --cream:#fff4d6; }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; min-height: 100svh; overflow-x: hidden; color: var(--cream);
-      font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
-      background:
-        radial-gradient(ellipse at 50% 35%, rgba(85,105,174,.22), transparent 42%),
-        linear-gradient(180deg, #0b1024 0%, #151a37 58%, #33274a 100%);
-      display: grid; place-items: center; padding: 22px 16px;
-    }
-    .stars, .stars::before, .stars::after {
-      position: fixed; inset: 0; pointer-events: none; content: ""; z-index: 0;
-      background-image: radial-gradient(2px 2px at 12% 17%, #ffe5a1 80%, transparent),
-        radial-gradient(1px 1px at 79% 12%, #fff 80%, transparent),
-        radial-gradient(2px 2px at 88% 39%, #ffe5a1 80%, transparent),
-        radial-gradient(1px 1px at 24% 62%, #fff 80%, transparent),
-        radial-gradient(1.5px 1.5px at 67% 73%, #ffe5a1 80%, transparent),
-        radial-gradient(1px 1px at 42% 29%, #fff 80%, transparent);
-      animation: twinkle 4s ease-in-out infinite alternate;
-    }
-    .stars::before { transform: translate(13px, 22px); opacity: .5; animation-delay: -2s; }
-    .stars::after { transform: translate(-18px, -9px); opacity: .4; animation-delay: -1s; }
-    @keyframes twinkle { from { opacity: .35; } to { opacity: 1; } }
-    .app { position: relative; z-index: 1; width: min(100%, 440px); text-align: center; }
-    .eyebrow { color: #bfc7e9; font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; }
-    h1 { font-size: clamp(1.8rem, 7vw, 2.5rem); line-height: 1.12; margin: 12px 0 8px; }
-    .subtitle { color: #d4d8ee; line-height: 1.55; margin: 0 auto; max-width: 330px; }
-    .room {
-      position: relative; margin: 28px auto 20px; width: min(100%, 330px); height: 285px;
-      border: 1px solid rgba(255,255,255,.1); border-radius: 28px; overflow: hidden;
-      background: linear-gradient(180deg, rgba(16,24,52,.75), rgba(35,30,61,.86));
-      box-shadow: 0 22px 70px #02051166, inset 0 0 30px #0003;
-      transition: background .8s, box-shadow .8s;
-    }
-    .window { position:absolute; left: 18px; bottom: 48px; width: 75px; height: 105px;
-      border: 5px solid #303957; border-radius: 7px; background: linear-gradient(#27385d,#141c38); }
-    .window::before { content:""; position:absolute; left:31px; top:0; height:100%; width:3px; background:#303957; }
-    .window::after { content:""; position:absolute; top:47px; left:0; width:100%; height:3px; background:#303957; }
-    .shelf { position:absolute; bottom:44px; right:17px; width:85px; height:9px; border-radius:8px; background:#58415b; }
-    .shelf::before { content:""; position:absolute; left:8px; top:8px; width:5px; height:26px; background:#58415b; box-shadow:62px 0 #58415b; }
-    .cord { position:absolute; left:50%; top:0; width:3px; height:58px; background:#5c5265; }
-    .bulb {
-      position:absolute; left:50%; top:53px; transform:translateX(-50%);
-      width:76px; height:94px; border-radius:48% 48% 42% 42%;
-      background: radial-gradient(circle at 35% 25%, #fff0b9, #e7b85e 72%, #bd7e3a);
-      box-shadow: 0 0 0 8px #ffd36a0b, 0 0 35px 12px #ffca5b35;
-      transition: all .6s ease;
-      animation: flicker 1.7s infinite;
-    }
-    .bulb::before { content:""; position:absolute; top:-12px; left:23px; width:30px; height:19px;
-      border-radius:5px; background:repeating-linear-gradient(0deg,#77718a 0 4px,#4b4b66 4px 7px); }
-    .face { position:absolute; left:0; right:0; top:43px; font-size:24px; color:#51344a; }
-    @keyframes flicker { 0%, 18%, 22%, 55%, 58%, 100% { opacity:1; filter:brightness(1); }
-      20%, 56% { opacity:.45; filter:brightness(.55); } }
-    .room.fixed { background: radial-gradient(ellipse at 50% 36%, #66502f 0%, #252746 52%, #27213c 100%); box-shadow: 0 0 55px #ffca5b22; }
-    .room.fixed .bulb { background: radial-gradient(circle at 35% 25%, #fffbe3, #ffe083 62%, #f7b84e); box-shadow: 0 0 28px 12px #ffce5c88, 0 0 90px 28px #ffce5c38; animation: glow 2.4s ease-in-out infinite alternate; }
-    .room.fixed .bulb::after { content:"✦  ·  ✧"; position:absolute; left:-36px; top:26px; width:150px; font-size:20px; color:#ffe9a0; white-space:nowrap; }
-    .room.fixed .face { top:43px; }
-    @keyframes glow { from { filter:brightness(1); } to { filter:brightness(1.12); } }
-    .bubble { min-height: 55px; font-size: 1.06rem; line-height:1.5; margin: 12px auto 20px; max-width: 340px; }
-    button {
-      border:0; border-radius:999px; padding:15px 23px; background:var(--gold); color:#342443;
-      font:700 1rem inherit; font-size:1rem; font-weight:800; cursor:pointer;
-      box-shadow:0 7px 0 #bd8746, 0 12px 30px #0003; transition:transform .15s, box-shadow .15s;
-      min-width: 205px; touch-action: manipulation;
-    }
-    button:active { transform:translateY(4px); box-shadow:0 3px 0 #bd8746; }
-    button:focus-visible { outline:3px solid white; outline-offset:4px; }
-    .hint { font-size:.78rem; color:#aeb7db; margin-top:15px; }
-    .final { display:none; margin:24px auto 0; padding:20px 18px; border:1px solid #ffd36a55; border-radius:20px; background:#0b102488; line-height:1.65; animation: rise .7s ease both; }
-    .final.show { display:block; }
-    .final strong { color:#ffe39b; }
-    .tiny { margin-top:18px; color:#bfc7e9; font-size:.8rem; }
-    @keyframes rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f4ead4">
+<title>Một chuyến đò thương nhau</title>
+<style>
+:root{--ink:#274c43;--deep:#163d37;--water:#8abbb0;--cream:#fff8e9;--gold:#d6ad62;--pink:#d98291}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font-family:Georgia,"Times New Roman",serif;background:#d9ebe1;min-height:100vh}
+button{font:inherit;cursor:pointer}
+.scene{min-height:100vh;position:relative;overflow:hidden;background:linear-gradient(#f6e7c8 0%,#f4e7d2 33%,#b8d9ca 34%,#7eb7ae 100%);padding:24px 16px 36px}
+.sun{position:absolute;width:100px;height:100px;border-radius:50%;background:#f7d68c;top:65px;right:12%;box-shadow:0 0 50px #f7d68c77}
+.hill{position:absolute;left:-10%;right:-10%;height:160px;top:200px;border-radius:50% 50% 0 0;background:#8db7a0;opacity:.75}
+.hill.two{top:230px;left:30%;background:#6e9f8a;opacity:.65}
+.river{position:absolute;top:330px;bottom:0;left:0;right:0;background:linear-gradient(170deg,#6ba9a0,#a9d4c6 45%,#6fa9a2);overflow:hidden}
+.ripple{position:absolute;height:2px;background:#e8f6df99;border-radius:100%;width:90px;transform:rotate(-8deg)}
+.r1{top:80px;left:7%}.r2{top:160px;left:65%;width:130px}.r3{top:280px;left:28%;width:160px}.r4{top:390px;left:70%;width:90px}.r5{top:470px;left:12%;width:130px}
+.lotus{position:absolute;font-size:30px;filter:drop-shadow(0 2px 2px #386c5a44);animation:float 4s ease-in-out infinite}
+.l1{top:70px;left:8%}.l2{top:230px;right:8%;font-size:24px;animation-delay:1s}.l3{top:360px;left:22%;font-size:22px;animation-delay:2s}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}
+.wrap{position:relative;z-index:2;max-width:680px;margin:0 auto}
+header{text-align:center;padding:20px 8px 12px}
+.kicker{font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:#54766a}
+h1{font-size:clamp(2.2rem,8vw,4rem);line-height:1.02;margin:14px 0 12px;color:var(--deep);font-weight:normal}
+.subtitle{max-width:450px;margin:0 auto;line-height:1.65;font-size:1.05rem}
+.card{background:#fff9edee;border:1px solid #fffdf3;border-radius:24px;padding:24px 20px;box-shadow:0 15px 40px #285e4b20;backdrop-filter:blur(6px);margin:18px auto 0}
+.progress{font-size:.8rem;letter-spacing:.08em;color:#6c8c7b;text-align:center;margin-bottom:8px}
+.question{text-align:center;font-size:1.45rem;line-height:1.35;margin:8px auto 18px;max-width:480px}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice{border:1px solid #c7d8c8;border-radius:16px;padding:14px 10px;background:#fffdf6;color:var(--ink);transition:.2s;line-height:1.35;min-height:76px}
+.choice:hover,.choice:focus-visible{background:#e8f2e7;border-color:#729b82;transform:translateY(-2px);outline:none}
+.choice span{display:block;font-size:1.4rem;margin-bottom:5px}
+.message{display:none;text-align:center;animation:appear .4s ease}
+.message.show{display:block}
+@keyframes appear{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.message .emoji{font-size:2.2rem}
+.message h2{font-size:1.55rem;font-weight:normal;margin:8px 0;color:var(--deep)}
+.message p{font-size:1.08rem;line-height:1.7;margin:8px auto 18px;max-width:490px}
+.next,.restart{border:0;border-radius:999px;background:var(--deep);color:#fff8e9;padding:13px 22px;box-shadow:0 5px 14px #163d3722}
+.next:hover,.restart:hover{background:#2d6758}
+.boat{text-align:center;font-size:3rem;margin:6px 0 -2px;filter:drop-shadow(0 5px 3px #315c4b25)}
+.footer{text-align:center;color:#315f54;font-size:.9rem;line-height:1.6;padding:18px 8px 0}
+.end{display:none;text-align:center}.end.show{display:block}
+.end p{line-height:1.8;font-size:1.1rem}
+.signature{font-style:italic;color:#6c7760}
+@media(max-width:430px){.card{padding:21px 15px}.choices{grid-template-columns:1fr 1fr;gap:8px}.choice{font-size:.94rem;padding:12px 7px}.question{font-size:1.3rem}.scene{padding-left:12px;padding-right:12px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
-  <div class="stars" aria-hidden="true"></div>
-  <main class="app">
-    <div class="eyebrow">Dịch vụ thợ điện lúc nửa đêm</div>
-    <h1>Đèn nhà nàng<br>đang chập chờn à? 💡</h1>
-    <p class="subtitle" id="intro">Đừng lo, tôi đến sửa đây… dù bằng cấp thợ điện vẫn đang được xét duyệt.</p>
-
-    <section class="room" id="room" aria-label="Căn phòng với chiếc bóng đèn đang chập chờn">
-      <div class="window"></div><div class="shelf"></div><div class="cord"></div>
-      <div class="bulb" id="bulb"><div class="face" id="face">•ᴗ•</div></div>
+<main class="scene">
+  <div class="sun"></div><div class="hill"></div><div class="hill two"></div>
+  <div class="river"><i class="ripple r1"></i><i class="ripple r2"></i><i class="ripple r3"></i><i class="ripple r4"></i><i class="ripple r5"></i></div>
+  <div class="lotus l1">🪷</div><div class="lotus l2">🪷</div><div class="lotus l3">🪷</div>
+  <div class="wrap">
+    <header>
+      <div class="kicker">Một góc bình yên dành riêng cho hai ta</div>
+      <h1>Một chuyến đò<br>thương nhau</h1>
+      <p class="subtitle">Mình cùng chèo qua một khúc sông miền Tây nhé. Không có đúng sai, chỉ có vài điều dịu dàng muốn nhắn gửi đến người thương.</p>
+    </header>
+    <div class="boat" aria-hidden="true">🛶</div>
+    <section class="card" id="game" aria-live="polite">
+      <div id="play">
+        <div class="progress" id="progress">BẾN 1 · 4</div>
+        <div class="question" id="question">Nếu hôm nay lòng mình có chút gợn sóng, mình sẽ chọn điều gì?</div>
+        <div class="choices" id="choices"></div>
+      </div>
+      <div class="message" id="message">
+        <div class="emoji" id="messageEmoji">🪷</div>
+        <h2 id="messageTitle">Một lời nhắn nhỏ</h2>
+        <p id="messageText"></p>
+        <button class="next" id="next">Mình chèo tiếp nhé →</button>
+      </div>
+      <div class="end" id="end">
+        <div style="font-size:2.5rem">🌙 🪷 🛶</div>
+        <h2 style="font-weight:normal;font-size:1.8rem">Đò đã cập bến bình yên</h2>
+        <p>Giữa dòng đời rộng lớn, mong chúng mình vẫn chọn đối đãi với nhau bằng lòng từ bi, sự chân thành và một trái tim biết lắng nghe.</p>
+        <p>Thương nhau không phải lúc nào cũng hiểu nhau ngay lập tức. Là dù có giận, vẫn nhớ người bên cạnh mình cũng có những nỗi niềm cần được ôm ấp.</p>
+        <p class="signature">“Nguyện cho người mình thương luôn an yên. Và nguyện cho chúng mình đủ dịu dàng để cùng nhau đi thật lâu.”</p>
+        <button class="restart" id="restart">Đi thêm một chuyến nữa 🪷</button>
+      </div>
     </section>
-
-    <p class="bubble" id="bubble" aria-live="polite">Đang kiểm tra bóng đèn… xin nàng đừng bật cầu dao bằng niềm tin.</p>
-    <button id="repair" type="button">🔧 Sửa đèn ngay</button>
-    <p class="hint" id="hint">Chạm nút để bắt đầu nhiệm vụ.</p>
-
-    <section class="final" id="final" aria-live="polite">
-      <div style="font-size:1.8rem">🌙 ✨</div>
-      <p><strong>Không thể hái trăng trên trời,</strong><br>nhưng có thể thắp sáng đêm tối.</p>
-      <p>Và nếu có lúc ngày của nàng hơi tối,<br>tôi có thể góp một chút ánh sáng bình thường thôi. 😊</p>
-      <p style="margin-bottom:0">— Thợ điện chưa có chứng chỉ, nhưng có thành ý.</p>
-    </section>
-    <p class="tiny">Bảo hành ánh sáng: đến khi nàng cười. 🤝</p>
-  </main>
-  <script>
-    const room = document.getElementById('room');
-    const face = document.getElementById('face');
-    const bubble = document.getElementById('bubble');
-    const button = document.getElementById('repair');
-    const hint = document.getElementById('hint');
-    const final = document.getElementById('final');
-    const intro = document.getElementById('intro');
-    let fixed = false;
-
-    button.addEventListener('click', () => {
-      if (!fixed) {
-        button.disabled = true;
-        button.textContent = '🪛 Đang vặn ốc...';
-        face.textContent = '×ᴗ×';
-        bubble.textContent = 'Chờ chút nhé… con ốc này có vẻ cũng đang suy nghĩ về cuộc đời.';
-        hint.textContent = 'Đang dùng 100% kinh nghiệm xem video hướng dẫn.';
-        room.style.animation = 'none';
-        window.setTimeout(() => {
-          fixed = true;
-          room.classList.add('fixed');
-          face.textContent = '•ᴗ•';
-          bubble.textContent = 'Ting! Sáng rồi nè. Thợ điện hôm nay cũng hơi bất ngờ. ✨';
-          intro.textContent = 'Ca sửa chữa thành công ngoài dự kiến!';
-          button.disabled = false;
-          button.textContent = '💛 Bật mí thêm một chút';
-          hint.textContent = 'Đèn sáng rồi, nhưng hình như còn điều muốn nói…';
-        }, 1300);
-      } else if (button.textContent.includes('Bật mí')) {
-        final.classList.add('show');
-        button.textContent = '🔁 Thử lại từ đầu';
-        hint.textContent = 'Nhiệm vụ hoàn thành. Thợ điện xin cúi chào!';
-        final.scrollIntoView({behavior:'smooth', block:'nearest'});
-      } else {
-        window.location.reload();
-      }
-    });
-  </script>
+    <div class="footer">Chậm một nhịp thôi, nghe nước chảy và thương nhau thêm một chút.<br>♡ Dành tặng người thương ♡</div>
+  </div>
+</main>
+<script>
+const stops = [
+ {q:"Nếu hôm nay lòng mình có chút gợn sóng, mình sẽ chọn điều gì?", options:[
+  ["🌿","Ngồi yên một chút","Có những lúc, bình yên bắt đầu từ việc thở chậm lại. Mình không cần giải quyết mọi chuyện ngay hôm nay; chỉ cần đừng để cơn giận nói thay trái tim."],
+  ["🫶","Nói với nhau thật lòng","Thương nhau thì mình nói thật, nhưng nói bằng sự tử tế. Lời nói mềm không làm mình yếu đi; nó giúp người thương có chỗ để mở lòng."],
+  ["🪷","Nhớ về lòng từ bi","Ai cũng có lúc mỏi mệt và vụng về. Mong mình nhìn nhau bằng đôi mắt cảm thông, không vội phán xét một khoảnh khắc mà quên cả hành trình."],
+  ["🛶","Cùng chèo qua thôi","Một mái chèo có thể chậm, hai mái chèo sẽ vững hơn. Chúng mình không cần thắng nhau trong một cuộc tranh luận; mình chỉ cần cùng tìm đường về bến bình yên."]
+ ]},
+ {q:"Nếu người thương đang buồn mà chưa biết nói thế nào…", options:[
+  ["🤍","Ở cạnh, không thúc ép","Em không cần phải ổn ngay đâu. Anh có thể ngồi đây cùng em, im lặng cũng được. Tình thương đôi khi là cho nhau một khoảng trời để thở."],
+  ["🍵","Pha một tách trà","Một tách trà không giải quyết hết muộn phiền, nhưng có thể nhắc ta rằng: em không phải đi qua mọi thứ một mình. Anh muốn chăm sóc em từ những điều nhỏ bé."],
+  ["🌸","Hỏi: em cần gì?","Anh không muốn đoán thay lòng em. Anh muốn học cách lắng nghe điều em thật sự cần, thay vì chỉ làm điều anh nghĩ là đúng."],
+  ["🙏","Gửi một lời nguyện lành","Nguyện cho những nặng lòng trong em được nhẹ bớt. Mong em nhớ rằng mình xứng đáng được yêu thương, kể cả vào những ngày em chẳng thấy mình rực rỡ."]
+ ]},
+ {q:"Trên sông có một đóa sen vừa nở. Mình nhớ điều gì?", options:[
+  ["🪷","Tình yêu cần chăm sóc","Hoa sen cần nước, ánh sáng và thời gian. Tình yêu cũng vậy: một lời hỏi han, một lần xin lỗi chân thành, một chút kiên nhẫn mỗi ngày."],
+  ["🌤️","Ai cũng có lúc chưa hoàn hảo","Mình yêu nhau không phải vì chẳng có khuyết điểm, mà vì sẵn lòng cùng sửa mình. Xin đừng dùng lỗi lầm của nhau làm vết thương để nhắc lại mãi."],
+  ["💗","Biết ơn vì đã gặp nhau","Giữa bao người và bao ngả rẽ, chúng mình đã có cơ hội bước vào đời nhau. Mong mình đừng xem sự hiện diện của người kia là điều hiển nhiên."],
+  ["🕊️","Yêu mà vẫn cho nhau tự do","Thương một người là mong người ấy được lớn lên, được là chính mình. Mình nắm tay nhau, không phải để giữ chặt đến đau, mà để cùng bước đi vững vàng."]
+ ]},
+ {q:"Khi nghĩ về chặng đường dài phía trước, mình mong điều gì nhất?", options:[
+  ["🏡","Một mái nhà bình yên","Mong nhà mình là nơi có thể trở về sau ngày dài, được nói thật, được nghỉ ngơi, được tha thứ và được ôm nhau mà không cần phải gồng lên."],
+  ["🌙","Cùng già đi dịu dàng","Mong sau này tóc có bạc, bước chân có chậm, mình vẫn nhớ hỏi nhau hôm nay có mệt không. Hạnh phúc đôi khi chỉ là còn muốn chăm nhau mỗi ngày."],
+  ["🙏","Cùng gieo điều thiện","Mong tình yêu của mình không chỉ làm hai đứa vui, mà còn khiến chúng mình tử tế hơn với gia đình, với người đời và với chính mình."],
+  ["🛶","Dù sóng nào cũng cùng chèo","Sẽ có ngày trời trong, cũng có ngày mưa giông. Anh không hứa mọi thứ luôn dễ dàng; anh chỉ mong mình luôn chọn đối thoại, tôn trọng và cùng tìm lối đi."]
+ ]}
+];
+let step=0;
+const play=document.getElementById('play'), message=document.getElementById('message'), end=document.getElementById('end');
+function render(){
+ const s=stops[step]; document.getElementById('progress').textContent=`BẾN ${step+1} · ${stops.length}`;
+ document.getElementById('question').textContent=s.q;
+ const box=document.getElementById('choices'); box.innerHTML='';
+ s.options.forEach(([emoji,label,text])=>{
+  const b=document.createElement('button'); b.className='choice';
+  b.innerHTML=`<span>${emoji}</span>${label}`;
+  b.addEventListener('click',()=>showMessage(emoji,label,text));
+  box.appendChild(b);
+ });
+}
+function showMessage(emoji,title,text){
+ document.getElementById('messageEmoji').textContent=emoji;
+ document.getElementById('messageTitle').textContent=title;
+ document.getElementById('messageText').textContent=text;
+ play.style.display='none'; message.classList.add('show');
+}
+document.getElementById('next').addEventListener('click',()=>{
+ step++; message.classList.remove('show');
+ if(step>=stops.length){play.style.display='none';end.classList.add('show');}
+ else{play.style.display='block';render();}
+});
+document.getElementById('restart').addEventListener('click',()=>{
+ step=0;end.classList.remove('show');message.classList.remove('show');play.style.display='block';render();
+});
+render();
+</script>
 </body>
 </html>
